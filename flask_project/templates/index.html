@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Column Selector</title>
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById("file");
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+            
+
+            if (result.error) {
+                alert(result.error);
+            } else {
+                console.log(result);
+                columnSelect = document.createElement("div");
+
+                // const columnSelect 
+                columnSelect.innerHTML = ""; // Clear previous options
+                result.columns.forEach(col => {
+                    console.log(col);
+                    const optionx = document.createElement("option");
+                    optionx.value = col;
+                    optionx.textContent = col;
+
+                    const option = document.createElement("option");
+                    option.value = col;
+                    option.textContent = col;
+
+                    // columnSelect.appendChild(option);
+                    const xColumn = document.getElementById("x-column")
+                    const yColumn = document.getElementById("y-column")
+                    xColumn.appendChild(optionx);
+                    yColumn.appendChild(option);
+                });
+                document.getElementById("selection-form").style.display = "block";
+            }
+        }
+
+        async function visualize() {
+            const xColumn = document.getElementById("x-column").value;
+            const yColumn = document.getElementById("y-column").value;
+
+            const response = await fetch("/visualize", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ x: xColumn, y: yColumn })
+            });
+
+            const result = await response.json();
+
+            if (result.image_url) {
+            // Insert the plot HTML into a container
+            const plotContainer = document.getElementById("plot");
+            plotContainer.innerHTML = `<img src="${result.image_url}" alt="Plot">`;
+        } else if (result.error) {
+            alert(`Error: ${result.error}`);
+        }
+        }
+        async function predict() {
+            const xColumn = document.getElementById("x-column").value;
+            const yColumn = document.getElementById("y-column").value;
+
+            const response = await fetch("/forecast", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ x: xColumn, y: yColumn })
+            });
+
+            const result = await response.json();
+
+            if (result.image_url) {
+            // Insert the plot HTML into a container
+            const plotContainer = document.getElementById("plot");
+            plotContainer.innerHTML = `<img src="${result.image_url}" alt="Plot">`;
+        } else if (result.error) {
+            alert(`Error: ${result.error}`);
+        }
+        }
+
+
+    </script>
+</head>
+<body>
+    <h1>Upload and Visualize CSV Data</h1>
+    <form id="upload-form" onsubmit="event.preventDefault(); uploadFile();" enctype="multipart/form-data">
+        <label for="file">Choose CSV File:</label>
+        <input type="file" id="file" name="file" accept=".csv" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="selection-form" style="display: none;">
+        <h2>Select Columns for Visualization</h2>
+        <label for="x-column">X-Axis:</label>
+        <select id="x-column" name="x-column"></select>
+        <label for="y-column">Y-Axis:</label>
+        <select id="y-column" name="y-column"></select>
+        <button onclick="predict()">Visualize</button>
+    </div>
+
+    <div id="plot"></div>
+</body>
+</html>
